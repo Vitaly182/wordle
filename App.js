@@ -53,13 +53,37 @@ export default function App() {
     return row === curRow && col === curCol;
   };
 
+  const getCellBGColor = (row, col) => {
+    const letter = rows[row][col];
+    if (row >= curRow) {
+      return colors.black;
+    }
+    if (letter === letters[col]) {
+      return colors.primary;
+    }
+    if (letters.includes(letter)) {
+      return colors.secondary;
+    }
+    return colors.darkgrey;
+  };
+
+  const getAllLettersWithColor = (color) => {
+      return rows.flatMap((row, i) =>
+      row.filter((cell, j) => getCellBGColor(i, j) === color)
+    );
+  };
+
+  const greenCaps = getAllLettersWithColor(colors.primary)
+  const yellowCaps = getAllLettersWithColor(colors.secondary)
+  const greyCaps = getAllLettersWithColor(colors.darkgrey)
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>WORDLE</Text>
       <ScrollView style={styles.map}>
         {rows.map((row, i) => (
           <View style={styles.row} key={`row-${i}`}>
-            {row.map((cell, j) => (
+            {row.map((letter, j) => (
               <View
                 style={[
                   styles.cell,
@@ -67,17 +91,23 @@ export default function App() {
                     borderColor: isCellActive(i, j)
                       ? colors.lightgrey
                       : colors.grey,
+                    backgroundColor: getCellBGColor(i, j),
                   },
                 ]}
                 key={`cell-${i}-${j}`}
               >
-                <Text style={styles.cellText}>{cell.toUpperCase()}</Text>
+                <Text style={styles.cellText}>{letter.toUpperCase()}</Text>
               </View>
             ))}
           </View>
         ))}
       </ScrollView>
-      <Keyboard onKeyPressed={onKeyPressed} />
+      <Keyboard
+        onKeyPressed={onKeyPressed}
+        greenCaps={greenCaps}
+        yellowCaps={yellowCaps}
+        greyCaps={greyCaps}
+      />
     </SafeAreaView>
   );
 }
