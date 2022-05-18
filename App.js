@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, SafeAreaView, ScrollView } from "react-native";
-import { colors, ENTER, CLEAR } from "./src/constants";
+import { StyleSheet, Text, View, SafeAreaView, ScrollView, Alert } from "react-native";
+import { colors, ENTER, CLEAR, colorsToEmoji } from "./src/constants";
 import Keyboard from "./src/components/Keyboard";
+import * as Clipboard from "expo-clipboard";
 
 const NUMBER_OF_TRIES = 6;
 
@@ -20,8 +21,51 @@ export default function App() {
 
   const [curRow, setCurRow] = useState(0);
   const [curCol, setCurCol] = useState(0);
+  const [gameState, setGameState] = useState('playing');
+
+
+  useEffect(() => {
+    if (curRow > 0) {
+      checkGameState();
+    }
+  }, [curRow])
+
+
+  const checkGameState = () => {
+    if (checkIfWon() && gameState !== 'won') {
+      Alert.alert('Huraaay', 'You won !!!', [{text: 'Share', onPress: shareScore}]);
+      setGameState('won');
+    } else if (checkIfLost() && gameState !== 'lost') {
+      Alert.alert('Oh', 'Try again tomorrow');
+      setGameState('lost');
+    }
+  }
+
+  const shareScore = () => {
+    const textMap = 
+      rows.map((row, i) => row.map((cell, j) => colorsToEmoji[getCellBGColor(i, j)]).join('')
+    )
+    .filter(row => row)
+    .join('\n');
+
+    const textToShare = `Wordle \n${textMap}`
+    Clipboard.setStringAsync(textToShare);
+    Alert.alert('Your score copied successfully', 'Share your score on your social media')
+  }
+
+  const checkIfWon = () => {
+    const row = rows[curRow - 1];
+    return row.every((letter, i) => letter === letters[i])
+  };
+
+  const checkIfLost = () => {
+    return !checkIfWon() && curRow === rows.length
+  };
 
   const onKeyPressed = (key) => {
+    if (gameState !== 'playing') {
+      return;
+    }
     const updatedRows = copyArray(rows);
 
     if (key === CLEAR) {
@@ -79,6 +123,7 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar style="light" />
       <Text style={styles.title}>WORDLE</Text>
       <ScrollView style={styles.map}>
         {rows.map((row, i) => (
@@ -123,6 +168,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: "bold",
     letterSpacing: 7,
+    marginTop: 30,
   },
   map: {
     alignSelf: "stretch",
