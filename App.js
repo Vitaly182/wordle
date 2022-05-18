@@ -4,15 +4,27 @@ import { StyleSheet, Text, View, SafeAreaView, ScrollView, Alert } from "react-n
 import { colors, ENTER, CLEAR, colorsToEmoji } from "./src/constants";
 import Keyboard from "./src/components/Keyboard";
 import * as Clipboard from "expo-clipboard";
+import words from './src/data/words'
 
-const NUMBER_OF_TRIES = 6;
+const NUMBER_OF_TRIES = 10;
 
 const copyArray = (arr) => {
   return [...arr.map((rows) => [...rows])];
 };
 
+const getDayOfTheYear = () => {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const diff = now - start;
+  const oneDay = 1000 * 60 * 60 * 24;
+  const day = Math.floor(diff / oneDay);
+  return day;
+}
+
+const dayOfTheYear = getDayOfTheYear()
+
 export default function App() {
-  const word = "hello";
+  const word = words[dayOfTheYear];
   const letters = word.split("");
 
   const [rows, setRows] = useState(
