@@ -1,17 +1,20 @@
 import { useState, useEffect } from "react";
-import { Text, View, ScrollView, Alert } from "react-native";
+import { Text, View, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { colors, ENTER, CLEAR, colorsToEmoji } from "../../constants";
 import Keyboard from "../Keyboard/Keyboard";
 import * as Clipboard from "expo-clipboard";
 import words from "../../data/words";
 import styles from './Game.styles'
 import {copyArray, getDayOfTheYear} from '../../utils'
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 const NUMBER_OF_TRIES = 10;
 
 const dayOfTheYear = getDayOfTheYear();
 
 const Game = () => {
+  // AsyncStorage.removeItem("@game")
   const word = words[dayOfTheYear];
   const letters = word.split("");
 
@@ -22,12 +25,52 @@ const Game = () => {
   const [curRow, setCurRow] = useState(0);
   const [curCol, setCurCol] = useState(0);
   const [gameState, setGameState] = useState("playing");
+  const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
     if (curRow > 0) {
       checkGameState();
     }
   }, [curRow]);
+
+  useEffect(() => {
+    if (loaded) {
+      persistState();
+    }
+  }, [rows, curRow, curCol, gameState,])
+
+  useEffect(() => {
+    readState();
+  }, [])
+
+  const persistState = async () => {
+    const data = {
+      rows, 
+      curRow,
+      curCol,
+      gameState,
+    };
+    try {
+      const dataString = JSON.stringify(data);
+      await AsyncStorage.setItem('@game', dataString);
+    } catch(e) {
+      console.log("Failed to write data to AsyncStorage", e);
+    }
+  }
+
+  const readState = async () => {
+    const dataString = await AsyncStorage.getItem("@game");
+    try {
+      const data = JSON.parse(dataString);
+      setRows(data.rows);
+      setCurRow(data.curRow);
+      setCurCol(data.curCol);
+      setGameState(data.gameState);
+    } catch(e) {
+      console.log("Couldn't parse the State")
+    }
+    setLoaded(true);
+  }
 
   const checkGameState = () => {
     if (checkIfWon() && gameState !== "won") {
@@ -124,6 +167,10 @@ const Game = () => {
   const greenCaps = getAllLettersWithColor(colors.primary);
   const yellowCaps = getAllLettersWithColor(colors.secondary);
   const greyCaps = getAllLettersWithColor(colors.darkgrey);
+
+  if(!loaded) {
+    return(<ActivityIndicator/>)
+  }
 
   return (
     <>
