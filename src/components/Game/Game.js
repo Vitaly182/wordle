@@ -5,13 +5,14 @@ import Keyboard from "../Keyboard/Keyboard";
 import * as Clipboard from "expo-clipboard";
 import words from "../../data/words";
 import styles from './Game.styles'
-import {copyArray, getDayOfTheYear} from '../../utils'
+import {copyArray, getDayOfTheYear, getDayKey} from '../../utils'
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
-const NUMBER_OF_TRIES = 10;
+const NUMBER_OF_TRIES = 7;
 
 const dayOfTheYear = getDayOfTheYear();
+const dayKey = getDayKey();
 
 const Game = () => {
   // AsyncStorage.removeItem("@game")
@@ -44,14 +45,20 @@ const Game = () => {
   }, [])
 
   const persistState = async () => {
-    const data = {
+    const dataForToday = {
       rows, 
       curRow,
       curCol,
       gameState,
     };
     try {
-      const dataString = JSON.stringify(data);
+      let existingStateString = await AsyncStorage.getItem("@game");
+      const existingState = existingStateString 
+        ? JSON.parse(existingStateString) 
+        : {};
+
+      existingState[dayKey] = dataForToday
+      const dataString = JSON.stringify(existingState);
       await AsyncStorage.setItem('@game', dataString);
     } catch(e) {
       console.log("Failed to write data to AsyncStorage", e);
@@ -62,10 +69,11 @@ const Game = () => {
     const dataString = await AsyncStorage.getItem("@game");
     try {
       const data = JSON.parse(dataString);
-      setRows(data.rows);
-      setCurRow(data.curRow);
-      setCurCol(data.curCol);
-      setGameState(data.gameState);
+      const day = data[dayKey];
+      setRows(day.rows);
+      setCurRow(day.curRow);
+      setCurCol(day.curCol);
+      setGameState(day.gameState);
     } catch(e) {
       console.log("Couldn't parse the State")
     }
