@@ -29,6 +29,12 @@ const Game = () => {
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
+    if (curRow > 0) {
+      checkGameState();
+    }
+  }, [curRow]);
+
+  useEffect(() => {
     if (loaded) {
       persistState();
     }
