@@ -1,6 +1,7 @@
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { View, Text, StyleSheet, Pressable, Alert } from "react-native";
 import React, { useState, useEffect } from "react";
-import { colors } from "../../constants";
+import { colors, colorsToEmoji } from "../../constants";
+import * as Clipboard from "expo-clipboard";
 
 
 const Number = ({ number, label }) => (
@@ -45,9 +46,24 @@ const GuessDistribution = () => {
   );
 };
 
-const EndScreen = ({ won = false }) => {
-  const share = () => {};
+const EndScreen = ({ won = false, rows, getCellBGColor }) => {
   const [secondsTillTomorrow, setSecondsTillTomorrow] = useState(0);
+
+  const share = () => {
+    const textMap = rows
+      .map((row, i) =>
+        row.map((cell, j) => colorsToEmoji[getCellBGColor(i, j)]).join("")
+      )
+      .filter((row) => row)
+      .join("\n");
+
+    const textToShare = `Wordle \n${textMap}`;
+    Clipboard.setStringAsync(textToShare);
+    Alert.alert(
+      "Your score copied successfully",
+      "Share your score on your social media"
+    );
+  };
 
   useEffect(() => {
     const updateTime = () => {
