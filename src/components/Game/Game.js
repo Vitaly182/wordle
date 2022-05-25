@@ -7,6 +7,7 @@ import words from "../../data/words";
 import styles from './Game.styles'
 import {copyArray, getDayOfTheYear, getDayKey} from '../../utils'
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import EndScreen from "../EndScreen";
 
 
 const NUMBER_OF_TRIES = 7;
@@ -178,6 +179,10 @@ const Game = () => {
 
   if(!loaded) {
     return(<ActivityIndicator/>)
+  }
+
+  if (gameState !== 'playing') {
+    return (<EndScreen won={gameState==='won'} />)
   }
 
   return (
