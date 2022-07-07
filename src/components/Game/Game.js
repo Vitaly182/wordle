@@ -3,11 +3,16 @@ import { Text, View, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { colors, ENTER, CLEAR } from "../../constants";
 import Keyboard from "../Keyboard/Keyboard";
 import words from "../../data/words";
-import styles from './Game.styles'
-import {copyArray, getDayOfTheYear, getDayKey} from '../../utils'
+import styles from "./Game.styles";
+import { copyArray, getDayOfTheYear, getDayKey } from "../../utils";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import EndScreen from "../EndScreen";
-
+import Animated, {
+  SlideInDown,
+  SlideInLeft,
+  ZoomIn,
+  FlipInEasyY,
+} from "react-native-reanimated";
 
 const NUMBER_OF_TRIES = 7;
 
@@ -15,7 +20,7 @@ const dayOfTheYear = getDayOfTheYear();
 const dayKey = getDayKey();
 
 const Game = () => {
-  // AsyncStorage.removeItem("@game")
+  AsyncStorage.removeItem("@game")
   const word = words[dayOfTheYear];
   const letters = word.split("");
 
@@ -26,7 +31,7 @@ const Game = () => {
   const [curRow, setCurRow] = useState(0);
   const [curCol, setCurCol] = useState(0);
   const [gameState, setGameState] = useState("playing");
-  const [loaded, setLoaded] = useState(false)
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     if (curRow > 0) {
@@ -38,32 +43,32 @@ const Game = () => {
     if (loaded) {
       persistState();
     }
-  }, [rows, curRow, curCol, gameState,])
+  }, [rows, curRow, curCol, gameState]);
 
   useEffect(() => {
     readState();
-  }, [])
+  }, []);
 
   const persistState = async () => {
     const dataForToday = {
-      rows, 
+      rows,
       curRow,
       curCol,
       gameState,
     };
     try {
       let existingStateString = await AsyncStorage.getItem("@game");
-      const existingState = existingStateString 
-        ? JSON.parse(existingStateString) 
+      const existingState = existingStateString
+        ? JSON.parse(existingStateString)
         : {};
 
-      existingState[dayKey] = dataForToday
+      existingState[dayKey] = dataForToday;
       const dataString = JSON.stringify(existingState);
-      await AsyncStorage.setItem('@game', dataString);
-    } catch(e) {
+      await AsyncStorage.setItem("@game", dataString);
+    } catch (e) {
       console.log("Failed to write data to AsyncStorage", e);
     }
-  }
+  };
 
   const readState = async () => {
     const dataString = await AsyncStorage.getItem("@game");
@@ -74,11 +79,11 @@ const Game = () => {
       setCurRow(day.curRow);
       setCurCol(day.curCol);
       setGameState(day.gameState);
-    } catch(e) {
-      console.log("Couldn't parse the State")
+    } catch (e) {
+      console.log("Couldn't parse the State");
     }
     setLoaded(true);
-  }
+  };
 
   const checkGameState = () => {
     if (checkIfWon() && gameState !== "won") {
@@ -156,36 +161,66 @@ const Game = () => {
   const yellowCaps = getAllLettersWithColor(colors.secondary);
   const greyCaps = getAllLettersWithColor(colors.darkgrey);
 
-  if(!loaded) {
-    return(<ActivityIndicator/>)
+  const getCellStyle = (i, j) => [
+    styles.cell,
+    {
+      borderColor: isCellActive(i, j) ? colors.lightgrey : colors.grey,
+      backgroundColor: getCellBGColor(i, j),
+    },
+  ];
+
+  if (!loaded) {
+    return <ActivityIndicator />;
   }
 
-  if (gameState !== 'playing') {
-    return (<EndScreen won={gameState==='won'} rows={rows} getCellBGColor={getCellBGColor} />)
+  if (gameState !== "playing") {
+    return (
+      <EndScreen
+        won={gameState === "won"}
+        rows={rows}
+        getCellBGColor={getCellBGColor}
+      />
+    );
   }
 
   return (
     <>
       <ScrollView style={styles.map}>
         {rows.map((row, i) => (
-          <View style={styles.row} key={`row-${i}`}>
+          <Animated.View
+            entering={SlideInLeft.delay(i * 30)}
+            style={styles.row}
+            key={`row-${i}`}
+          >
             {row.map((letter, j) => (
-              <View
-                style={[
-                  styles.cell,
-                  {
-                    borderColor: isCellActive(i, j)
-                      ? colors.lightgrey
-                      : colors.grey,
-                    backgroundColor: getCellBGColor(i, j),
-                  },
-                ]}
-                key={`cell-${i}-${j}`}
-              >
-                <Text style={styles.cellText}>{letter.toUpperCase()}</Text>
-              </View>
+              <>
+              {i < curRow && (
+                <Animated.View
+                  entering={FlipInEasyY.delay(j * 100)}
+                  style={getCellStyle(i, j)}
+                  key={`cell-color-${i}-${j}`}
+                >
+                  <Text style={styles.cellText}>{letter.toUpperCase()}</Text>
+                </Animated.View>
+              )}
+              {i === curRow && !!letter && (
+                <Animated.View
+                  entering={ZoomIn}
+                  style={getCellStyle(i, j)}
+                  key={`cell-active-${i}-${j}`}
+                >
+                  <Text style={styles.cellText}>{letter.toUpperCase()}</Text>
+                </Animated.View>
+              )}
+              {!letter && (
+                <View style={getCellStyle(i, j)} key={`cell-${i}-${j}`}>
+                  <Text style={styles.cellText}>{letter.toUpperCase()}</Text>
+                </View>
+              )}
+            </>
+
             ))}
-          </View>
+          </Animated.View>
         ))}
       </ScrollView>
       <Keyboard
@@ -197,6 +232,5 @@ const Game = () => {
     </>
   );
 };
-
 
 export default Game;
