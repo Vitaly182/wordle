@@ -20,7 +20,7 @@ const dayOfTheYear = getDayOfTheYear();
 const dayKey = getDayKey();
 
 const Game = () => {
-  AsyncStorage.removeItem("@game")
+  // AsyncStorage.removeItem("@game");
   const word = words[dayOfTheYear];
   const letters = word.split("");
 
@@ -193,7 +193,7 @@ const Game = () => {
             key={`row-${i}`}
           >
             {row.map((letter, j) => (
-              <>
+              <ScrollView key={`cell-${i}-${j}`}>
               {i < curRow && (
                 <Animated.View
                   entering={FlipInEasyY.delay(j * 100)}
@@ -217,8 +217,7 @@ const Game = () => {
                   <Text style={styles.cellText}>{letter.toUpperCase()}</Text>
                 </View>
               )}
-            </>
-
+            </ScrollView>
             ))}
           </Animated.View>
         ))}

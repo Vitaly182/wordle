@@ -66,8 +66,12 @@ const EndScreen = ({ won = false, rows, getCellBGColor }) => {
   const [maxStreak, setMaxStreak] = useState(0);
   const [distribution, setDistribution] = useState(null);
 
+
   useEffect(() => {
-    readState();
+    const timer = setTimeout(() => {
+      readState()
+    }, 1);
+    return () => clearTimeout(timer);
   }, []);
 
   const share = () => {
@@ -140,11 +144,11 @@ const EndScreen = ({ won = false, rows, getCellBGColor }) => {
 
     // guess distribution
 
-    const dist = [0, 0, 0, 0, 0, 0];
+    const dist = [0, 0, 0, 0, 0, 0, 0];
 
     values.map((game) => {
       if (game.gameState == "won") {
-        const tries = game.rows.filter((row) => row[0]).length;
+        const tries = game.rows.filter((row) => row[0]).length - 1;
         dist[tries] = dist[tries] + 1;
       }
     });
